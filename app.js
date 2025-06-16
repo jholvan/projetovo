@@ -1,71 +1,77 @@
-// Categorias disponíveis
+// Cole seu config do Firebase aqui:
+const firebaseConfig = {
+  // Pegue este bloco no painel do Firebase > Configurar app web
+ apiKey: "AIzaSyBKdc1KrdH3PGqyER_ySGyiqLCeYaciEgI",
+    authDomain: "projetovo-a6c9c.firebaseapp.com",
+    projectId: "projetovo-a6c9c",
+    storageBucket: "projetovo-a6c9c.firebasestorage.app",
+    messagingSenderId: "452953019157",
+    appId: "1:452953019157:web:3a365894fc60cd01ef8f1c",
+    measurementId: "G-R4J14EL62Y"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// --- Autenticação ---
+const authContainer = document.getElementById("auth-container");
+const regContainer = document.getElementById("register-container");
+const mainApp = document.getElementById("main-app");
+
+// Troca entre login/cadastro
+document.getElementById("show-register").onclick = (e) => {
+  e.preventDefault(); authContainer.style.display = "none"; regContainer.style.display = "block";
+};
+document.getElementById("show-login").onclick = (e) => {
+  e.preventDefault(); regContainer.style.display = "none"; authContainer.style.display = "block";
+};
+
+// Login
+document.getElementById("login-form").onsubmit = function(e){
+  e.preventDefault();
+  document.getElementById("login-erro").textContent = "";
+  const email = document.getElementById("email").value;
+  const senha = document.getElementById("password").value;
+  auth.signInWithEmailAndPassword(email, senha)
+    .catch(err => document.getElementById("login-erro").textContent = err.message);
+};
+// Cadastro
+document.getElementById("register-form").onsubmit = function(e){
+  e.preventDefault();
+  document.getElementById("register-erro").textContent = "";
+  const email = document.getElementById("reg-email").value;
+  const senha = document.getElementById("reg-password").value;
+  auth.createUserWithEmailAndPassword(email, senha)
+    .then(() => { regContainer.style.display="none"; authContainer.style.display="block"; })
+    .catch(err => document.getElementById("register-erro").textContent = err.message);
+};
+// Logout
+document.getElementById("logoutBtn").onclick = function(){
+  auth.signOut();
+};
+
+// Controle de tela conforme login
+auth.onAuthStateChanged(user => {
+  if(user){
+    authContainer.style.display = "none";
+    regContainer.style.display = "none";
+    mainApp.style.display = "block";
+    inicializar();
+  } else {
+    authContainer.style.display = "block";
+    regContainer.style.display = "none";
+    mainApp.style.display = "none";
+  }
+});
+
+// --- App Notas ---
 const categorias = [
   'Despesas Médicas', 'Alimentação', 'Moradia', 'Contas de Consumo', 'Transporte', 'Lazer e Entretenimento', 'Outras Despesas'
 ];
-
-// IndexedDB helpers
-const DB_NAME = "NotasFiscaisDB";
-const DB_VERSION = 1;
-const STORE_NAME = "notas";
-let db = null;
-
-function abrirDB() {
-  return new Promise((resolve, reject) => {
-    if (db) return resolve(db);
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => { db = request.result; resolve(db); };
-    request.onupgradeneeded = (event) => {
-      const dbUpgrade = event.target.result;
-      if (!dbUpgrade.objectStoreNames.contains(STORE_NAME)) {
-        dbUpgrade.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
-      }
-    };
-  });
-}
-function addNota(nota) {
-  return abrirDB().then(db => new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.add(nota);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  }));
-}
-function getNotas() {
-  return abrirDB().then(db => new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readonly");
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.getAll();
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  }));
-}
-function deleteNota(id) {
-  return abrirDB().then(db => new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.delete(id);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  }));
-}
-function updateNota(nota) {
-  return abrirDB().then(db => new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.put(nota);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  }));
-}
-
-// Estado global
 let todasNotas = [];
 let categoriaSelecionada = categorias[0];
 let mesSelecionado = null;
 
-// Utilitários
 function formatarData(dataStr) {
   if (!dataStr) return '';
   const [y, m, d] = dataStr.split('-');
@@ -74,9 +80,7 @@ function formatarData(dataStr) {
 function formatarValor(valor) {
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
-function getAnoMes(data) {
-  return data ? data.slice(0,7) : '';
-}
+function getAnoMes(data) { return data ? data.slice(0,7) : ''; }
 function mesNome(anoMes) {
   if (!anoMes) return '';
   const [ano, mes] = anoMes.split('-');
@@ -84,7 +88,6 @@ function mesNome(anoMes) {
   return `${nomes[parseInt(mes,10)-1]}/${ano}`;
 }
 
-// Popula select de mês de acordo com as notas existentes
 function preencherMeses() {
   const select = document.getElementById('mesSelect');
   const meses = Array.from(new Set(
@@ -110,7 +113,6 @@ function preencherMeses() {
   select.value = mesSelecionado;
 }
 
-// Mostra total do mês selecionado
 function mostrarTotalMes() {
   const totalSpan = document.getElementById('valorTotalMes');
   const total = todasNotas.filter(n =>
@@ -119,7 +121,6 @@ function mostrarTotalMes() {
   totalSpan.textContent = `Total do mês: ${formatarValor(total)}`;
 }
 
-// Renderiza notas filtradas por categoria, mês e busca
 function renderizarNotas() {
   preencherMeses();
   mostrarTotalMes();
@@ -135,26 +136,12 @@ function renderizarNotas() {
         formatarData(nota.data).includes(busca) ||
         formatarValor(nota.valor).includes(busca)
       )
-    ).sort((a, b) => b.id - a.id);
-
+    ).sort((a, b) => b.id.localeCompare(a.id));
   if (notasFiltradas.length === 0) {
     notesList.innerHTML = `<div style="color:var(--muted);padding:32px;font-size:1.1rem;">Nenhuma nota encontrada para esta categoria e mês.</div>`;
     return;
   }
-
   notasFiltradas.forEach(nota => {
-    let iconeArquivo = '';
-    let linkArquivo = '';
-    if (nota.arquivo && nota.arquivo.name) {
-      if (nota.arquivo.type === 'application/pdf') iconeArquivo = '📄';
-      else if (nota.arquivo.type && nota.arquivo.type.startsWith('image/')) iconeArquivo = '🖼️';
-      else iconeArquivo = '📎';
-      const blob = new Blob([nota.arquivo.data], { type: nota.arquivo.type });
-      const url = URL.createObjectURL(blob);
-      linkArquivo = `<a href="${url}" class="note-link" target="_blank" rel="noopener"><span>${iconeArquivo}</span><span>${nota.arquivo.name}</span></a>`;
-    } else {
-      linkArquivo = `<span class="note-link" style="color:var(--muted);font-style:italic;"><span>📎</span><span>Nenhum arquivo</span></span>`;
-    }
     const card = document.createElement('div');
     card.className = 'note-card';
     card.innerHTML = `
@@ -164,29 +151,25 @@ function renderizarNotas() {
         <span><strong>Data:</strong> ${formatarData(nota.data)}</span>
         <span><strong>Valor:</strong> ${formatarValor(nota.valor)}</span>
       </div>
-      ${linkArquivo}
       <div class="note-actions">
-        <button onclick="visualizarNota(${nota.id})">Visualizar</button>
-        <button onclick="editarNota(${nota.id})">Editar</button>
-        <button onclick="excluirNota(${nota.id})">Excluir</button>
+        <button onclick="visualizarNota('${nota.id}')">Visualizar</button>
+        <button onclick="editarNota('${nota.id}')">Editar</button>
+        <button onclick="excluirNota('${nota.id}')">Excluir</button>
       </div>
     `;
     notesList.appendChild(card);
   });
 }
 
-// Visualizar nota (placeholder)
 function visualizarNota(id) {
   const nota = todasNotas.find(n => n.id === id);
   alert(
     `Descrição: ${nota.descricao}\nCategoria: ${nota.categoria}\nData: ${formatarData(nota.data)}\nValor: ${formatarValor(nota.valor)}`
   );
 }
-
-// Excluir nota
 function excluirNota(id) {
   if (confirm('Deseja realmente excluir esta nota fiscal?')) {
-    deleteNota(id).then(() => {
+    db.collection("notas").doc(id).delete().then(()=>{
       todasNotas = todasNotas.filter(n => n.id !== id);
       renderizarNotas();
     });
@@ -202,13 +185,11 @@ const addNoteBtn = document.getElementById('addNoteBtn');
 const closeModalBtn = document.getElementById('closeModalBtn');
 const cancelBtn = document.getElementById('cancelBtn');
 const noteForm = document.getElementById('noteForm');
-const arquivoAtualDiv = document.getElementById('arquivoAtual');
 const modalTitulo = document.getElementById('modalTitulo');
 const editIdInput = document.getElementById('editId');
 
 function abrirModal(nota = null) {
   noteForm.reset();
-  arquivoAtualDiv.innerHTML = '';
   editIdInput.value = '';
   modalTitulo.textContent = nota ? 'Editar Nota Fiscal' : 'Nova Nota Fiscal';
   if (nota) {
@@ -217,14 +198,6 @@ function abrirModal(nota = null) {
     document.getElementById('data').value = nota.data;
     document.getElementById('valor').value = nota.valor;
     editIdInput.value = nota.id;
-    if (nota.arquivo && nota.arquivo.name) {
-      let icone = '📎';
-      if (nota.arquivo.type === 'application/pdf') icone = '📄';
-      else if (nota.arquivo.type && nota.arquivo.type.startsWith('image/')) icone = '🖼️';
-      const blob = new Blob([nota.arquivo.data], { type: nota.arquivo.type });
-      const url = URL.createObjectURL(blob);
-      arquivoAtualDiv.innerHTML = `<small>Arquivo atual: <a href="${url}" target="_blank">${icone} ${nota.arquivo.name}</a></small>`;
-    }
   } else {
     document.getElementById('categoria').value = categoriaSelecionada !== "Todas" ? categoriaSelecionada : '';
   }
@@ -245,51 +218,24 @@ noteForm.addEventListener('submit', function(e) {
   const descricao = document.getElementById('descricao').value.trim();
   const data = document.getElementById('data').value;
   const valor = parseFloat(document.getElementById('valor').value);
-  const arquivoInput = document.getElementById('arquivo');
-  const editId = editIdInput.value ? Number(editIdInput.value) : null;
-  let notaAntiga = editId ? todasNotas.find(n=>n.id===editId) : null;
-  function salvarNotaComArquivo(arquivo) {
-    if (editId) {
-      const notaEditada = {
-        id: editId,
-        categoria, descricao, data, valor,
-        arquivo: arquivo !== null ? arquivo : (notaAntiga ? notaAntiga.arquivo : null)
-      };
-      updateNota(notaEditada).then(()=>{
-        const idx = todasNotas.findIndex(n=>n.id===editId);
-        todasNotas[idx] = notaEditada;
-        fecharModal();
-        categoriaSelecionada = categoria;
-        renderizarNotas();
-      });
-    } else {
-      const novaNota = { categoria, descricao, data, valor, arquivo };
-      addNota(novaNota).then(id=>{
-        novaNota.id = id;
-        todasNotas.unshift(novaNota);
-        fecharModal();
-        categoriaSelecionada = categoria;
-        renderizarNotas();
-      });
-    }
-  }
-  if (arquivoInput.files.length > 0) {
-    const f = arquivoInput.files[0];
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-      const arquivo = {
-        name: f.name,
-        type: f.type,
-        data: evt.target.result
-      };
-      salvarNotaComArquivo(arquivo);
-    };
-    reader.readAsArrayBuffer(f);
+  const editId = editIdInput.value ? editIdInput.value : null;
+  if (editId) {
+    db.collection("notas").doc(editId).set({categoria, descricao, data, valor}).then(()=>{
+      const idx = todasNotas.findIndex(n=>n.id===editId);
+      todasNotas[idx] = {id: editId, categoria, descricao, data, valor};
+      fecharModal();
+      categoriaSelecionada = categoria;
+      renderizarNotas();
+    });
   } else {
-    salvarNotaComArquivo(null);
+    db.collection("notas").add({categoria, descricao, data, valor}).then(docRef=>{
+      todasNotas.unshift({id: docRef.id, categoria, descricao, data, valor});
+      fecharModal();
+      categoriaSelecionada = categoria;
+      renderizarNotas();
+    });
   }
 });
-
 function editarNota(id) {
   const nota = todasNotas.find(n => n.id === id);
   if (!nota) return;
@@ -314,15 +260,16 @@ document.getElementById('mesSelect').addEventListener('change', function() {
 });
 
 function inicializar() {
-  getNotas().then(notas => {
-    todasNotas = notas;
+  db.collection("notas").get().then(snapshot => {
+    todasNotas = [];
+    snapshot.forEach(doc => {
+      todasNotas.push({...doc.data(), id: doc.id});
+    });
     renderizarNotas();
   });
 }
-inicializar();
 
-// ==== Botão baixar resumo em PDF ====
-
+// Download PDF
 document.getElementById('baixarResumoBtn').addEventListener('click', function() {
   const notasMes = todasNotas.filter(n =>
     (categoriaSelecionada === "Todas" ? true : n.categoria === categoriaSelecionada) && getAnoMes(n.data) === mesSelecionado
