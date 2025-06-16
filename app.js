@@ -63,8 +63,6 @@ function updateNota(nota) {
 // Estado global
 let todasNotas = [];
 let categoriaSelecionada = categorias[0];
-
-// Mês selecionado (formato: yyyy-mm)
 let mesSelecionado = null;
 
 // Utilitários
@@ -77,11 +75,9 @@ function formatarValor(valor) {
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 function getAnoMes(data) {
-  // data: '2025-06-13' -> '2025-06'
   return data ? data.slice(0,7) : '';
 }
 function mesNome(anoMes) {
-  // anoMes: '2025-06' -> 'Junho/2025'
   if (!anoMes) return '';
   const [ano, mes] = anoMes.split('-');
   const nomes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -91,10 +87,9 @@ function mesNome(anoMes) {
 // Popula select de mês de acordo com as notas existentes
 function preencherMeses() {
   const select = document.getElementById('mesSelect');
-  // todos meses/anos presentes nas notas da categoria selecionada
   const meses = Array.from(new Set(
     todasNotas
-      .filter(n => n.categoria === categoriaSelecionada)
+      .filter(n => categoriaSelecionada === "Todas" ? true : n.categoria === categoriaSelecionada)
       .map(n => getAnoMes(n.data))
   )).sort((a,b)=>b.localeCompare(a));
   select.innerHTML = '';
@@ -111,7 +106,6 @@ function preencherMeses() {
     opt.textContent = mesNome(m);
     select.appendChild(opt);
   });
-  // Se mês anterior escolhido ainda existe, mantém. Senão, pega o mais recente.
   if (!mesSelecionado || !meses.includes(mesSelecionado)) mesSelecionado = meses[0];
   select.value = mesSelecionado;
 }
@@ -120,7 +114,7 @@ function preencherMeses() {
 function mostrarTotalMes() {
   const totalSpan = document.getElementById('valorTotalMes');
   const total = todasNotas.filter(n =>
-    n.categoria === categoriaSelecionada && getAnoMes(n.data) === mesSelecionado
+    (categoriaSelecionada === "Todas" ? true : n.categoria === categoriaSelecionada) && getAnoMes(n.data) === mesSelecionado
   ).reduce((soma, n) => soma + Number(n.valor), 0);
   totalSpan.textContent = `Total do mês: ${formatarValor(total)}`;
 }
@@ -134,7 +128,7 @@ function renderizarNotas() {
   const busca = document.getElementById('searchInput').value.toLowerCase();
   const notasFiltradas = todasNotas
     .filter(nota =>
-      nota.categoria === categoriaSelecionada &&
+      (categoriaSelecionada === "Todas" ? true : nota.categoria === categoriaSelecionada) &&
       getAnoMes(nota.data) === mesSelecionado &&
       (
         nota.descricao.toLowerCase().includes(busca) ||
@@ -166,6 +160,7 @@ function renderizarNotas() {
     card.innerHTML = `
       <div class="note-title">${nota.descricao}</div>
       <div class="note-info">
+        <span><strong>Categoria:</strong> ${nota.categoria}</span>
         <span><strong>Data:</strong> ${formatarData(nota.data)}</span>
         <span><strong>Valor:</strong> ${formatarValor(nota.valor)}</span>
       </div>
@@ -184,7 +179,7 @@ function renderizarNotas() {
 function visualizarNota(id) {
   const nota = todasNotas.find(n => n.id === id);
   alert(
-    `Descrição: ${nota.descricao}\nData: ${formatarData(nota.data)}\nValor: ${formatarValor(nota.valor)}`
+    `Descrição: ${nota.descricao}\nCategoria: ${nota.categoria}\nData: ${formatarData(nota.data)}\nValor: ${formatarValor(nota.valor)}`
   );
 }
 
@@ -222,7 +217,6 @@ function abrirModal(nota = null) {
     document.getElementById('data').value = nota.data;
     document.getElementById('valor').value = nota.valor;
     editIdInput.value = nota.id;
-    // Mostra arquivo atual (se houver)
     if (nota.arquivo && nota.arquivo.name) {
       let icone = '📎';
       if (nota.arquivo.type === 'application/pdf') icone = '📄';
@@ -232,7 +226,7 @@ function abrirModal(nota = null) {
       arquivoAtualDiv.innerHTML = `<small>Arquivo atual: <a href="${url}" target="_blank">${icone} ${nota.arquivo.name}</a></small>`;
     }
   } else {
-    document.getElementById('categoria').value = categoriaSelecionada;
+    document.getElementById('categoria').value = categoriaSelecionada !== "Todas" ? categoriaSelecionada : '';
   }
   modalOverlay.classList.remove('hidden');
   setTimeout(() => { document.getElementById('descricao').focus(); }, 120);
@@ -245,7 +239,6 @@ cancelBtn.addEventListener('click', fecharModal);
 modalOverlay.addEventListener('click', function(e) { if (e.target === modalOverlay) fecharModal(); });
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && !modalOverlay.classList.contains('hidden')) fecharModal(); });
 
-// Adicionar ou Editar nota
 noteForm.addEventListener('submit', function(e) {
   e.preventDefault();
   const categoria = document.getElementById('categoria').value;
@@ -255,10 +248,8 @@ noteForm.addEventListener('submit', function(e) {
   const arquivoInput = document.getElementById('arquivo');
   const editId = editIdInput.value ? Number(editIdInput.value) : null;
   let notaAntiga = editId ? todasNotas.find(n=>n.id===editId) : null;
-  // Função de salvar nota (add/edit)
   function salvarNotaComArquivo(arquivo) {
     if (editId) {
-      // Atualiza
       const notaEditada = {
         id: editId,
         categoria, descricao, data, valor,
@@ -272,7 +263,6 @@ noteForm.addEventListener('submit', function(e) {
         renderizarNotas();
       });
     } else {
-      // Adiciona nova
       const novaNota = { categoria, descricao, data, valor, arquivo };
       addNota(novaNota).then(id=>{
         novaNota.id = id;
@@ -283,7 +273,6 @@ noteForm.addEventListener('submit', function(e) {
       });
     }
   }
-  // Lê arquivo se selecionado
   if (arquivoInput.files.length > 0) {
     const f = arquivoInput.files[0];
     const reader = new FileReader();
@@ -301,17 +290,14 @@ noteForm.addEventListener('submit', function(e) {
   }
 });
 
-// Editar nota
 function editarNota(id) {
   const nota = todasNotas.find(n => n.id === id);
   if (!nota) return;
   abrirModal(nota);
 }
 
-// Busca/filtro
 document.getElementById('searchInput').addEventListener('input', renderizarNotas);
 
-// Navegação de categorias
 document.querySelectorAll('aside nav a').forEach(link => {
   link.addEventListener('click', function(e) {
     e.preventDefault();
@@ -322,13 +308,11 @@ document.querySelectorAll('aside nav a').forEach(link => {
   });
 });
 
-// Seleção de mês
 document.getElementById('mesSelect').addEventListener('change', function() {
   mesSelecionado = this.value;
   renderizarNotas();
 });
 
-// Inicialização
 function inicializar() {
   getNotas().then(notas => {
     todasNotas = notas;
@@ -336,3 +320,54 @@ function inicializar() {
   });
 }
 inicializar();
+
+// ==== Botão baixar resumo em PDF ====
+
+document.getElementById('baixarResumoBtn').addEventListener('click', function() {
+  const notasMes = todasNotas.filter(n =>
+    (categoriaSelecionada === "Todas" ? true : n.categoria === categoriaSelecionada) && getAnoMes(n.data) === mesSelecionado
+  );
+  if (notasMes.length === 0) {
+    alert('Não há lançamentos para exportar neste mês/categoria.');
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const tituloCategoria = categoriaSelecionada === "Todas" ? "Todas as Despesas" : categoriaSelecionada;
+  doc.setFontSize(16);
+  doc.text(`Resumo de Gastos - ${tituloCategoria}`, 10, 15);
+  doc.setFontSize(11);
+  doc.text(`Mês: ${mesNome(mesSelecionado)}`, 10, 23);
+
+  const startY = 32;
+  let y = startY;
+
+  doc.setFont('helvetica','bold');
+  doc.text('Categoria', 10, y);
+  doc.text('Descrição', 48, y);
+  doc.text('Data', 120, y);
+  doc.text('Valor', 150, y);
+  doc.setFont('helvetica','normal');
+  y += 6;
+
+  notasMes.forEach(nota => {
+    doc.text(nota.categoria, 10, y, { maxWidth: 36 });
+    doc.text(nota.descricao, 48, y, { maxWidth: 70 });
+    doc.text(formatarData(nota.data), 120, y);
+    doc.text(formatarValor(nota.valor), 150, y);
+    y += 7;
+    if (y > 280) {
+      doc.addPage();
+      y = 15;
+    }
+  });
+
+  const total = notasMes.reduce((soma, n) => soma + Number(n.valor), 0);
+  y += 6;
+  doc.setFont('helvetica','bold');
+  doc.text(`Total do mês: ${formatarValor(total)}`, 10, y);
+
+  const nomeArquivo = `Resumo-${tituloCategoria.replace(/\s/g,'')}-${mesSelecionado}.pdf`;
+  doc.save(nomeArquivo);
+});
