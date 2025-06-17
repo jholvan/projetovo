@@ -9,65 +9,8 @@ const firebaseConfig = {
   measurementId: "G-R4J14EL62Y"
 };
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
 const db = firebase.firestore();
 
-// --- Autenticação ---
-const authContainer = document.getElementById("auth-container");
-const regContainer = document.getElementById("register-container");
-const mainApp = document.getElementById("main-app");
-
-document.getElementById("show-register").onclick = (e) => {
-  e.preventDefault(); authContainer.style.display = "none"; regContainer.style.display = "block";
-};
-document.getElementById("show-login").onclick = (e) => {
-  e.preventDefault(); regContainer.style.display = "none"; authContainer.style.display = "block";
-};
-
-// Login
-document.getElementById("login-form").onsubmit = function(e){
-  e.preventDefault();
-  document.getElementById("login-erro").textContent = "";
-  const email = document.getElementById("email").value;
-  const senha = document.getElementById("password").value;
-  auth.signInWithEmailAndPassword(email, senha)
-    .catch(err => document.getElementById("login-erro").textContent = err.message);
-};
-
-// Cadastro
-document.getElementById("register-form").onsubmit = function(e){
-  e.preventDefault();
-  document.getElementById("register-erro").textContent = "";
-  const email = document.getElementById("reg-email").value;
-  const senha = document.getElementById("reg-password").value;
-  auth.createUserWithEmailAndPassword(email, senha)
-    .then(() => { 
-      regContainer.style.display="none";
-      authContainer.style.display="block";
-    })
-    .catch(err => document.getElementById("register-erro").textContent = err.message);
-};
-
-// Logout
-document.getElementById("logoutBtn").onclick = function(){
-  auth.signOut();
-};
-
-// Controle de tela conforme login
-auth.onAuthStateChanged(user => {
-  if(user){
-    authContainer.style.display = "none";
-    regContainer.style.display = "none";
-    mainApp.style.display = "block";
-    inicializar();
-  } else {
-    authContainer.style.display = "block";
-    regContainer.style.display = "none";
-    mainApp.style.display = "none";
-  }
-});
-
-// --- App Notas ---
 const categorias = [
   'Despesas Médicas', 'Alimentação', 'Moradia', 'Contas de Consumo', 'Transporte', 'Lazer e Entretenimento', 'Outras Despesas'
 ];
@@ -270,6 +213,7 @@ function inicializar() {
     renderizarNotas();
   });
 }
+inicializar();
 
 document.getElementById('baixarResumoBtn').addEventListener('click', function() {
   const notasMes = todasNotas.filter(n =>
