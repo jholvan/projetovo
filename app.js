@@ -1,12 +1,12 @@
 // Cole seu config do Firebase aqui (pegue no console do Firebase)
 const firebaseConfig = {
   apiKey: "AIzaSyBKdc1KrdH3PGqyER_ySGyiqLCeYaciEgI",
-    authDomain: "projetovo-a6c9c.firebaseapp.com",
-    projectId: "projetovo-a6c9c",
-    storageBucket: "projetovo-a6c9c.firebasestorage.app",
-    messagingSenderId: "452953019157",
-    appId: "1:452953019157:web:3a365894fc60cd01ef8f1c",
-    measurementId: "G-R4J14EL62Y"
+  authDomain: "projetovo-a6c9c.firebaseapp.com",
+  projectId: "projetovo-a6c9c",
+  storageBucket: "projetovo-a6c9c.firebasestorage.app",
+  messagingSenderId: "452953019157",
+  appId: "1:452953019157:web:3a365894fc60cd01ef8f1c",
+  measurementId: "G-R4J14EL62Y"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
