@@ -1,7 +1,6 @@
-// Cole seu config do Firebase aqui:
+// Cole seu config do Firebase aqui (pegue no console do Firebase)
 const firebaseConfig = {
-  // Pegue este bloco no painel do Firebase > Configurar app web
- apiKey: "AIzaSyBKdc1KrdH3PGqyER_ySGyiqLCeYaciEgI",
+  apiKey: "AIzaSyBKdc1KrdH3PGqyER_ySGyiqLCeYaciEgI",
     authDomain: "projetovo-a6c9c.firebaseapp.com",
     projectId: "projetovo-a6c9c",
     storageBucket: "projetovo-a6c9c.firebasestorage.app",
@@ -18,7 +17,6 @@ const authContainer = document.getElementById("auth-container");
 const regContainer = document.getElementById("register-container");
 const mainApp = document.getElementById("main-app");
 
-// Troca entre login/cadastro
 document.getElementById("show-register").onclick = (e) => {
   e.preventDefault(); authContainer.style.display = "none"; regContainer.style.display = "block";
 };
@@ -35,6 +33,7 @@ document.getElementById("login-form").onsubmit = function(e){
   auth.signInWithEmailAndPassword(email, senha)
     .catch(err => document.getElementById("login-erro").textContent = err.message);
 };
+
 // Cadastro
 document.getElementById("register-form").onsubmit = function(e){
   e.preventDefault();
@@ -42,9 +41,13 @@ document.getElementById("register-form").onsubmit = function(e){
   const email = document.getElementById("reg-email").value;
   const senha = document.getElementById("reg-password").value;
   auth.createUserWithEmailAndPassword(email, senha)
-    .then(() => { regContainer.style.display="none"; authContainer.style.display="block"; })
+    .then(() => { 
+      regContainer.style.display="none";
+      authContainer.style.display="block";
+    })
     .catch(err => document.getElementById("register-erro").textContent = err.message);
 };
+
 // Logout
 document.getElementById("logoutBtn").onclick = function(){
   auth.signOut();
@@ -179,7 +182,6 @@ window.visualizarNota = visualizarNota;
 window.editarNota = editarNota;
 window.excluirNota = excluirNota;
 
-// Modal de nova nota/edição
 const modalOverlay = document.getElementById('modalOverlay');
 const addNoteBtn = document.getElementById('addNoteBtn');
 const closeModalBtn = document.getElementById('closeModalBtn');
@@ -269,7 +271,6 @@ function inicializar() {
   });
 }
 
-// Download PDF
 document.getElementById('baixarResumoBtn').addEventListener('click', function() {
   const notasMes = todasNotas.filter(n =>
     (categoriaSelecionada === "Todas" ? true : n.categoria === categoriaSelecionada) && getAnoMes(n.data) === mesSelecionado
