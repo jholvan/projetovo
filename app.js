@@ -371,6 +371,11 @@ document.getElementById('baixarResumoBtn').addEventListener('click', function() 
   const nomeArquivo = `Resumo-${tituloCategoria.replace(/\s/g,'')}-${mesSelecionado}.pdf`;
   doc.save(nomeArquivo);
 import { neon } from '@netlify/neon';
-const sql = neon(); // automatically uses env NETLIFY_DATABASE_URL
+const sql = neon(); 
+postgresql://neondb_owner:npg_J7yhYnj6XEUO@ep-royal-rice-a5u30nbx.us-east-2.aws.neon.tech/neondb?sslmode=require
+postgresql://neondb_owner:npg_J7yhYnj6XEUO@ep-royal-rice-a5u30nbx.us-east-2.aws.neon.tech/neondb?sslmode=require
+postgresql://neondb_owner:npg_J7yhYnj6XEUO@ep-royal-rice-a5u30nbx.us-east-2.aws.neon.tech/neondb?sslmode=require
+postgresql://neondb_owner:npg_J7yhYnj6XEUO@ep-royal-rice-a5u30nbx.us-east-2.aws.neon.tech/neondb?sslmode=require
+postgresql://neondb_owner:npg_J7yhYnj6XEUO@ep-royal-rice-a5u30nbx.us-east-2.aws.neon.tech/neondb?sslmode=require
 const [post] = await sql`SELECT * FROM posts WHERE id = ${postId}`;
 });
