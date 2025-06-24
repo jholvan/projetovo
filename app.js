@@ -370,4 +370,7 @@ document.getElementById('baixarResumoBtn').addEventListener('click', function() 
 
   const nomeArquivo = `Resumo-${tituloCategoria.replace(/\s/g,'')}-${mesSelecionado}.pdf`;
   doc.save(nomeArquivo);
+import { neon } from '@netlify/neon';
+const sql = neon(); // automatically uses env NETLIFY_DATABASE_URL
+const [post] = await sql`SELECT * FROM posts WHERE id = ${postId}`;
 });
